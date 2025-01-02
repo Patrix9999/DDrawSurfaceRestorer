@@ -5,14 +5,36 @@ namespace GOTHIC_NAMESPACE
 	// NOTE! Callbacks won't be called by default, you need to uncomment
 	// hooks that will call specific callback
 
+	void WriteCALL(unsigned long address, unsigned long dest)
+	{
+		DWORD OldProt;
+
+		VirtualProtect((void*)address, 5, PAGE_EXECUTE_READWRITE, &OldProt);
+
+		*(char*)address = (char)0xE8;
+		*(DWORD*)((DWORD)address + 1) = dest - address - 5;
+
+		VirtualProtect((void*)address, 5, OldProt, &OldProt);
+	}
+
+	void WriteNOPs(unsigned long address, int bytes)
+	{
+		unsigned long oldProtBack;
+
+		VirtualProtect((LPVOID)address, bytes, PAGE_EXECUTE_READWRITE, &oldProtBack);
+		memset((LPVOID)address, 0x90, bytes);
+		VirtualProtect((LPVOID)address, bytes, oldProtBack, &oldProtBack);
+	}
+
 	void Game_EntryPoint()
 	{
-
+		WriteCALL(zSwitch(0x0071EDD9, 0x0075B57D, 0x0076AB79, 0x006576A9), (DWORD)&zCRndD3D_Vid_Blit_EndScene);
+		WriteNOPs(zSwitch(0x0071EDDE, 0x0075B582, 0x0076AB7E, 0x006576AE), 5);
 	}
 
 	void Game_Init()
 	{
-
+	
 	}
 
 	void Game_Exit()
